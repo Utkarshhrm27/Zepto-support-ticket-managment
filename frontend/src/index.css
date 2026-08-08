@@ -1,3 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-zinc-950 text-red-500 font-['Share_Tech_Mono'] selection:bg-red-500 selection:text-black;
+    background-image: 
+      linear-gradient(rgba(239, 68, 68, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(239, 68, 68, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+}
+
+@layer components {
+  /* Gamified Neobrutalism Vector Style */
+  .vector-box {
+    @apply bg-zinc-900 border-2 border-red-600 shadow-[4px_4px_0_0_rgba(220,38,38,1)] transition-transform;
+  }
+  .vector-box:hover {
+    @apply -translate-x-1 -translate-y-1 shadow-[8px_8px_0_0_rgba(220,38,38,1)];
+  }
+  .vector-btn {
+    @apply bg-red-600 text-black px-4 py-2 uppercase font-bold border-2 border-transparent 
+    hover:bg-zinc-950 hover:text-red-500 hover:border-red-600 active:translate-y-1 active:translate-x-1 active:shadow-none
+    shadow-[4px_4px_0_0_rgba(153,27,27,1)] transition-all;
+  }
+  .vector-btn-outline {
+    @apply bg-zinc-950 text-red-500 px-4 py-2 uppercase font-bold border-2 border-red-600
+    hover:bg-red-600 hover:text-black active:translate-y-1 active:translate-x-1 active:shadow-none
+    shadow-[4px_4px_0_0_rgba(220,38,38,1)] transition-all;
+  }
+}
