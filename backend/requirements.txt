@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic-settings
+scikit-learn
+pandas
+anthropic
+python-multipart
+websockets
+pytest
+httpx
