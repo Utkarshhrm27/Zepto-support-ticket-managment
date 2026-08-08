@@ -12,6 +12,32 @@ export async function fetchBoardTickets() {
     return res.json();
 }
 
+export const createTicket = async (data) => {
+    const res = await fetch(`${API_URL}/tickets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    return res.json()
+}
+
+export const uploadTickets = async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch(`${API_URL}/tickets/upload`, {
+        method: 'POST',
+        body: formData
+    })
+    if (!res.ok) throw new Error("Upload failed")
+    return res.json()
+}
+
+export async function fetchTicketDetail(id) {
+    const res = await fetch(`${API_URL}/tickets/${id}`);
+    if (!res.ok) throw new Error("Failed to fetch ticket detail");
+    return res.json();
+}
+
 export async function approveTicket(id) {
     const res = await fetch(`${API_URL}/tickets/${id}/approve`, { method: "POST" });
     if (!res.ok) throw new Error("Failed to approve ticket");

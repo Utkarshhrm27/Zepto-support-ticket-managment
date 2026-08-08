@@ -28,12 +28,13 @@ async def lifespan(app: FastAPI):
     # Shutdown
     pass
 
-from app.routers import tickets, stats
+from app.routers import tickets, stats, orders
 
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(tickets.router)
 app.include_router(stats.router)
+app.include_router(orders.router)
 
 origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
 

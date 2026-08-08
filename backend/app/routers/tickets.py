@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 from sqlalchemy.orm import Session
+import pandas as pd
 from datetime import datetime
 from typing import List
 
 from app.database import SessionLocal
 from app.models import Ticket, ResolvedTicket, DecisionLog, Order
-from app.schemas import TicketOut, TicketDetailOut, OverrideRequest, DecisionLogOut, PrecedentDetail, OrderOut
+from app.schemas import TicketOut, TicketDetailOut, OverrideRequest, DecisionLogOut, PrecedentDetail, OrderOut, TicketCreate
 from app.services.pipeline import process_ticket
 
 router = APIRouter(prefix="/api/tickets", tags=["Tickets"])
@@ -19,6 +20,42 @@ def get_db():
 
 VALID_ACTIONS = ["redelivery", "full_refund", "partial_refund", "coupon", "refund_reissue", "apology_no_action", "escalation"]
 
+@router.post("", response_model=TicketOut)
+def create_ticket(req: TicketCreate, db: Session = Depends(get_db)):
+    # Check if order exists, if not create dummy
+    order = db.query(Order).filter(Order.id == req.order_id).first()
+    if not order:
+        order = Order(
+            id=req.order_id,
+            items=5,
+            value_inr=1000,
+            delivery_time_min=30,
+            delivery_status="delivered"
+        )
+        db.add(order)
+    
+    # Generate new ID
+    last_ticket = db.query(Ticket).filter(Ticket.id.like("N-%")).order_by(Ticket.id.desc()).first()
+    new_num = 1
+    if last_ticket:
+        try:
+            new_num = int(last_ticket.id.split("-")[1]) + 1
+        except:
+            pass
+    t_id = f"N-{new_num:03d}"
+    
+    ticket = Ticket(
+        id=t_id,
+        order_id=req.order_id,
+        description=req.description,
+        status="pending",
+        created_at=datetime.utcnow()
+    )
+    db.add(ticket)
+    db.commit()
+    db.refresh(ticket)
+    return ticket
+
 @router.post("/process-all")
 def process_all_tickets(request: Request, db: Session = Depends(get_db)):
     pending = db.query(Ticket).filter(Ticket.status == "pending").all()
@@ -27,6 +64,36 @@ def process_all_tickets(request: Request, db: Session = Depends(get_db)):
         process_ticket(db, t, request)
         count += 1
     return {"processed": count}
+
+@router.post("/upload")
+async def upload_tickets(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only CSV files allowed")
+    
+    df = pd.read_csv(file.file, encoding="utf-8-sig")
+    count = 0
+    
+    for _, row in df.iterrows():
+        ticket_id = str(row["ticket_id"])
+        ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+        if not ticket:
+            ticket = Ticket(id=ticket_id)
+            db.add(ticket)
+        
+        if pd.isna(row.get("created_at")):
+            ticket.created_at = datetime.utcnow()
+        else:
+            ticket.created_at = pd.to_datetime(row["created_at"])
+            
+        ticket.order_id = str(row["order_id"])
+        ticket.description = str(row["description"])
+        
+        if not ticket.status:
+            ticket.status = "pending"
+        count += 1
+        
+    db.commit()
+    return {"uploaded": count}
 
 @router.post("/{id}/process", response_model=TicketOut)
 def process_single_ticket(id: str, request: Request, db: Session = Depends(get_db)):
@@ -62,9 +129,11 @@ def get_ticket_detail(id: str, db: Session = Depends(get_db)):
                 precedents.append(pt)
                 
     # manual conversion to deal with dict mapping
-    res = TicketDetailOut.model_validate(t)
-    res.precedents = [PrecedentDetail.model_validate(p) for p in precedents]
-    res.order = OrderOut.model_validate(order)
+    res = TicketDetailOut.model_validate({
+        **t.__dict__,
+        "order": order,
+        "precedents": precedents
+    })
     return res
 
 @router.post("/{id}/approve")

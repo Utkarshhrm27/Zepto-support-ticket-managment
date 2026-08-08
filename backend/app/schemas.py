@@ -12,6 +12,10 @@ class OrderOut(BaseModel):
     class Config:
         from_attributes = True
 
+class TicketCreate(BaseModel):
+    description: str
+    order_id: str
+
 class PrecedentDetail(BaseModel):
     id: str
     category: str
@@ -34,7 +38,7 @@ class TicketOut(BaseModel):
     confidence: Optional[float] = None
     refund_amount_inr: Optional[int] = None
     order_id: str
-    created_at: datetime
+    created_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True

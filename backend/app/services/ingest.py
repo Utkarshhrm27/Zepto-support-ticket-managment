@@ -47,9 +47,13 @@ def load_new_tickets(session: Session):
         if not ticket:
             ticket = Ticket(id=row["ticket_id"])
             session.add(ticket)
-        ticket.created_at = pd.to_datetime(row["created_at"])
-        ticket.order_id = row["order_id"]
-        ticket.description = row["description"]
+        if pd.isna(row["created_at"]):
+            ticket.created_at = datetime.utcnow()
+        else:
+            ticket.created_at = pd.to_datetime(row["created_at"])
+        
+        ticket.order_id = str(row["order_id"])
+        ticket.description = str(row["description"])
         if not ticket.status:
             ticket.status = "pending"
     session.commit()

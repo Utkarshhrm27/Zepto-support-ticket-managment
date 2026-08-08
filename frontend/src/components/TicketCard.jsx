@@ -2,8 +2,9 @@ import { useState } from 'react'
 import ConfidenceBadge from './ConfidenceBadge'
 import OverrideModal from './OverrideModal'
 import { approveTicket } from '../api/client'
+import { ArrowRight } from 'lucide-react'
 
-export default function TicketCard({ ticket, onUpdate, laneType }) {
+export default function TicketCard({ ticket, onUpdate, laneType, onClick }) {
     const [showOverride, setShowOverride] = useState(false)
 
     const handleApprove = async () => {
@@ -36,6 +37,22 @@ export default function TicketCard({ ticket, onUpdate, laneType }) {
                 {ticket.refund_amount_inr > 0 && (
                     <div className="text-green-400 mt-1">₹ {ticket.refund_amount_inr} REFUND</div>
                 )}
+                {isPendingHuman && (
+                    <div className="mt-4 border-t border-yellow-900 pt-3">
+                        <button onClick={onClick} className="w-full text-xs uppercase tracking-widest text-yellow-500 hover:text-white flex items-center justify-between">
+                            <span>Review Required</span>
+                            <ArrowRight size={14} />
+                        </button>
+                    </div>
+                )}
+                {ticket.status === 'auto_resolved' && (
+                    <div className="mt-4 border-t border-green-900 pt-3">
+                        <button onClick={onClick} className="w-full text-xs uppercase tracking-widest text-green-500 hover:text-white flex items-center justify-between">
+                            <span>View Details</span>
+                            <ArrowRight size={14} />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {isHumanResolved && (
@@ -45,18 +62,6 @@ export default function TicketCard({ ticket, onUpdate, laneType }) {
                 </div>
             )}
 
-            {laneType === 'human' && isPendingHuman && (
-                <div className="flex gap-2 mt-4">
-                    <button onClick={handleApprove} className="flex-1 vector-btn text-xs bg-green-600 hover:text-green-600 shadow-[4px_4px_0_0_rgba(21,128,61,1)] hover:border-green-600">
-                        Approve
-                    </button>
-                    <button onClick={() => setShowOverride(true)} className="flex-1 vector-btn-outline text-xs">
-                        Override
-                    </button>
-                </div>
-            )}
-
-            {showOverride && <OverrideModal ticket={ticket} onClose={() => setShowOverride(false)} onUpdate={onUpdate} />}
         </div>
     )
 }
