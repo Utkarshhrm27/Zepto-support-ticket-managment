@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import engine, Base, SessionLocal
 from app.models import ResolvedTicket, Order, Ticket
 from app.services.ingest import run_ingest
+from app.services.similarity import SimilarityIndex
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,6 +18,10 @@ async def lifespan(app: FastAPI):
         # Check if empty, run ingest
         if db.query(ResolvedTicket).count() == 0:
             run_ingest(db)
+        
+        # Build Similarity Engine
+        resolved_tickets = db.query(ResolvedTicket).all()
+        app.state.similarity_index = SimilarityIndex(resolved_tickets)
     finally:
         db.close()
     yield
