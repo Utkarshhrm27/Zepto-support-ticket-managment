@@ -1,0 +1,6 @@
+ticket_id,category,description,resolution_action,resolution_note,time_to_resolve_min,csat
+H-1000,missing_item,milk packet missing from my order,redelivery,missing item re-sent,32,5
+H-1001,wrong_item,received apple instead of orange,full_refund,wrong item sent,12,4
+H-1002,order_late,order is late by 30 mins,coupon,issued apology coupon,45,3
+H-1003,quality_issue,fruits were rotten,escalation,escalated to QA,120,3
+H-1004,refund_pending,where is my refund,apology_no_action,refund already processed,10,5

@@ -1,0 +1,6 @@
+ticket_id,created_at,order_id,description
+N-000,2026-08-07T20:58:00,ORD-9900,fruits were rotten
+N-001,2026-08-07T21:05:00,ORD-9901,milk packet missing from my order
+N-002,2026-08-07T21:15:00,ORD-9902,order is very late
+N-003,2026-08-07T21:20:00,ORD-9903,where is my refund?
+N-004,2026-08-07T21:30:00,ORD-9904,completely wrong items delivered

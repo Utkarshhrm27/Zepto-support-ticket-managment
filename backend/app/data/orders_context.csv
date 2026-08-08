@@ -1,0 +1,6 @@
+order_id,items,value_inr,delivery_time_min,delivery_status
+ORD-9900,1,999,24,cancelled
+ORD-9901,3,450,15,delivered
+ORD-9902,5,1200,45,delivered
+ORD-9903,2,250,10,delivered
+ORD-9904,1,150,12,delivered
