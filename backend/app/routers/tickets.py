@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 from sqlalchemy.orm import Session
-import pandas as pd
+import csv
+import io
 from datetime import datetime
 from typing import List
 
@@ -70,20 +71,24 @@ async def upload_tickets(file: UploadFile = File(...), db: Session = Depends(get
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files allowed")
     
-    df = pd.read_csv(file.file, encoding="utf-8-sig")
+    contents = await file.read()
+    reader = csv.DictReader(io.StringIO(contents.decode("utf-8-sig")))
     count = 0
     
-    for _, row in df.iterrows():
+    for row in reader:
         ticket_id = str(row["ticket_id"])
         ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
         if not ticket:
             ticket = Ticket(id=ticket_id)
             db.add(ticket)
         
-        if pd.isna(row.get("created_at")):
+        if not row.get("created_at"):
             ticket.created_at = datetime.utcnow()
         else:
-            ticket.created_at = pd.to_datetime(row["created_at"])
+            try:
+                ticket.created_at = datetime.fromisoformat(row["created_at"].replace('Z', '+00:00'))
+            except ValueError:
+                ticket.created_at = datetime.utcnow()
             
         ticket.order_id = str(row["order_id"])
         ticket.description = str(row["description"])

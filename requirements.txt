@@ -2,10 +2,7 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 pydantic-settings
-scikit-learn
-pandas
 google-generativeai
 python-multipart
 websockets
-pytest
 httpx
