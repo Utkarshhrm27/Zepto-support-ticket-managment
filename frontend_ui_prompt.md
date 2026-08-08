@@ -1,0 +1,168 @@
+# Frontend UI Prompt — Zepto Support Ticket Manager (Black & Red Vector Style)
+
+Build a modern, production-quality frontend UI for a **Zepto Support Ticket Manager powered by AI**.
+
+**Important Context:** The backend for this project is **ALREADY BUILT** using FastAPI, SQLite, Scikit-Learn (TF-IDF), and Google Gemini API. Your job is ONLY to build the React/Vite frontend that consumes these existing APIs.
+
+The application is designed for a 10-minute-delivery company that receives thousands of customer support tickets every day.
+
+The core idea of the application is:
+**A new support ticket is compared with historically resolved tickets. If the system has strong evidence (high similarity) and high confidence, it automatically resolves the ticket. If the evidence is weak or historical precedents disagree, the ticket is sent to a human reviewer. In both cases, the system generates a drafted customer reply via Google Gemini.**
+
+---
+
+# 1. Overall Design Direction
+
+Create a **premium SaaS / AI operations dashboard** but with a **Gamified, Vector-style Black & Red aesthetic**.
+
+The UI should feel like a high-tech internal support operations platform. 
+Design characteristics:
+* Gamified Neobrutalism / Vector Style
+* Color scheme: Deep Blacks (`bg-zinc-950`), vibrant Reds (`text-red-500`, `border-red-600`), and pure Whites for high contrast.
+* Sharp corners, thick borders, and solid block shadows (`shadow-[4px_4px_0_0_rgba(220,38,38,1)]`).
+* Tech/Arcade typography (e.g., `Share Tech Mono` or similar).
+* Responsive, Desktop-first.
+* Easy to understand within 5 seconds.
+
+Use:
+* React + Vite
+* Tailwind CSS v4 (`@tailwindcss/vite`)
+* Lucide icons
+* Reusable components
+
+The application should visually communicate:
+```text
+NEW TICKET → SIMILAR HISTORICAL TICKETS → CONFIDENCE → AI DECISION
+     ↓
+ ┌───────────────┐
+ │               │
+HIGH            LOW
+ │               │
+AUTO-RESOLVE    HUMAN REVIEW
+ │               │
+ACTION          REVIEW
+ └───────┬───────┘
+         ↓
+  DRAFTED REPLY
+```
+
+---
+
+# 2. Main Application Layout
+
+Use a persistent top header and a main content area. (Sidebar is optional; a clean top-nav works perfectly for the Black/Red hacker aesthetic).
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ ⚡ Zepto Nexus                  [ EXECUTE ALL PENDING ]     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ Stats Bar (Total, Auto, Human, Rate)                        │
+│                                                             │
+├──────────────┬──────────────────────────────────────────────┤
+│              │                                              │
+│ [SYS] AUTO   │              [REQ] NEEDS HUMAN               │
+│              │                                              │
+└──────────────┴──────────────────────────────────────────────┘
+```
+
+---
+
+# 3. Dashboard KPI Cards (StatsBar)
+
+Fetch data from `GET /api/stats`. Response format:
+`{"total": 5, "auto_resolved": 2, "needs_human": 3, "avg_confidence": 0.82, "auto_resolve_rate": 40.0}`
+
+Create four premium statistic boxes with thick red borders:
+1. **TOTAL TICKETS**
+2. **AUTO-RESOLVED** (Green accent)
+3. **NEEDS HUMAN** (Yellow accent)
+4. **AVG CONFIDENCE** / **AUTOMATION RATE**
+
+---
+
+# 4. Main Two-Lane Ticket Board
+
+Fetch tickets from `GET /api/tickets?lane=all`. 
+
+Create two large columns:
+
+### Lane 1: AUTO-RESOLVED
+* Tickets where `status === 'auto_resolved'`
+* Subtitle: High-confidence routine resolutions
+* Visual accent: Green (`border-green-600`)
+
+### Lane 2: NEEDS HUMAN
+* Tickets where `status` is `needs_human`, `approved`, or `overridden`.
+* Subtitle: Uncertain cases requiring review
+* Visual accent: Yellow/Amber (`border-yellow-600`)
+
+Each ticket card should show:
+* Ticket ID (`t.id`)
+* Description (`t.description`)
+* Predicted Action (`t.predicted_action`)
+* Confidence (`t.confidence` as a percentage badge)
+* Refund Amount (if `t.refund_amount_inr > 0`, show "₹X REFUND")
+
+Clicking a card should open a Modal or navigate to a dedicated **Ticket Detail Page**.
+
+---
+
+# 5. Ticket Detail View
+
+Fetch detailed data from `GET /api/tickets/{id}`.
+This endpoint returns the ticket along with `order` details and a `precedents` array.
+
+Display the following sections:
+
+### A. Order Context Card
+* Order ID: `order.id`
+* Items: `order.items`
+* Order Value: `₹{order.value_inr}`
+* Delivery Status: `order.delivery_status`
+*(If delivery status is 'cancelled', highlight it in Red, as redelivery is blocked).*
+
+### B. AI Decision & Reasoning Card
+* Confidence: Show `confidence` prominently.
+* Action: `predicted_action`
+* Reason: Render the `reasoning` string returned by the backend.
+
+### C. Top Similar Precedents
+Map through the `precedents` array. Each precedent has:
+* `id`
+* `category`
+* `resolution_action`
+* `score` (Map this to a percentage similarity)
+* `csat` (Render as stars)
+
+### D. Drafted Customer Reply
+Render the `drafted_reply` text generated by Gemini inside a prominent, copyable text box.
+
+### E. Human Review Controls (Only if `status === 'needs_human'`)
+* **[ APPROVE SUGGESTION ]** → Calls `POST /api/tickets/{id}/approve`
+* **[ OVERRIDE ACTION ]** → Opens a prompt to select a new action (from `['redelivery', 'full_refund', 'partial_refund', 'coupon', 'refund_reissue', 'apology_no_action', 'escalation']`) and reason. Calls `POST /api/tickets/{id}/override`.
+
+---
+
+# 6. Backend Integration
+
+The frontend MUST connect to the existing FastAPI backend.
+
+**API Base URL:** `http://localhost:8000/api`
+
+**Available Endpoints:**
+1. `GET /api/stats`
+2. `GET /api/tickets?lane=all`
+3. `GET /api/tickets/{id}`
+4. `POST /api/tickets/process-all` (Triggers pipeline for pending tickets)
+5. `POST /api/tickets/{id}/approve`
+6. `POST /api/tickets/{id}/override` (Requires JSON body: `{"action": "str", "reason": "str", "resolved_by": "human"}`)
+
+---
+
+# 7. Final Product Goal
+
+The UI should make the following statement obvious:
+> **"This is an AI-powered support resolution system that learns from historical resolutions, automatically resolves high-confidence routine tickets, and safely escalates uncertain cases to humans with evidence and a drafted reply."**
+
+Do not make the application look like a generic ticketing system. Emphasize the Gamified Vector aesthetic and the AI decision flow. Build the core dashboard and ticket detail modal/page first.
